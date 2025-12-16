@@ -5,21 +5,22 @@ const port = process.env.PORT || 3000;
 app.get('/', (req, res) => {
   res.json({
     message: 'Perchance API',
-    usage: '/api?generator=YOUR_GENERATOR',
-    example: '/api?generator=ai-person-generator'
+    usage: '/api?generator=YOUR_GENERATOR&count=1',
+    example: '/api?generator=ai-person-generator&count=1',
+    documentation: 'https://perchance.org/api-tutorial'
   });
 });
 
 app.get('/api', async (req, res) => {
   try {
-    const { generator } = req.query;
+    const { generator, count = 1 } = req.query;
 
     if (!generator) {
       return res.status(400).json({ error: 'Generator name required' });
     }
 
-    // Use Perchance's built-in API endpoint
-    const url = `https://perchance.org/api/downloadGenerator?generatorName=${generator}&__cacheBust=${Math.random()}`;
+    // Use Perchance's official API endpoint
+    const url = `https://perchance.org/api/generateList.php?generator=${generator}&count=${count}`;
     
     const response = await fetch(url);
     
@@ -27,13 +28,13 @@ app.get('/api', async (req, res) => {
       return res.status(404).json({ error: 'Generator not found' });
     }
 
-    const html = await response.text();
+    const data = await response.json();
     
-    // Return the raw generator code
+    // Return the results
     res.json({ 
       generator: generator,
-      html: html,
-      message: 'Generator HTML retrieved. To execute, visit: https://perchance.org/' + generator
+      count: parseInt(count),
+      results: data
     });
 
   } catch (error) {
